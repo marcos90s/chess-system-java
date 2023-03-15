@@ -27,8 +27,18 @@ public class PartidaXadrez {
 	}
 
 	private void setupInicial() {
-		placeNewPiece('b', 6, new Torre(tabuleiro, Color.WHITE));
-		placeNewPiece('e', 8, new Rei(tabuleiro, Color.BLACK));
-		placeNewPiece('e', 1, new Rei(tabuleiro, Color.WHITE));
+		placeNewPiece('c', 1, new Torre(tabuleiro, Color.WHITE));
+        placeNewPiece('c', 2, new Torre(tabuleiro, Color.WHITE));
+        placeNewPiece('d', 2, new Torre(tabuleiro, Color.WHITE));
+        placeNewPiece('e', 2, new Torre(tabuleiro, Color.WHITE));
+        placeNewPiece('e', 1, new Torre(tabuleiro, Color.WHITE));
+        placeNewPiece('d', 1, new Rei(tabuleiro, Color.WHITE));
+
+        placeNewPiece('c', 7, new Torre(tabuleiro, Color.BLACK));
+        placeNewPiece('c', 8, new Torre(tabuleiro, Color.BLACK));
+        placeNewPiece('d', 7, new Torre(tabuleiro, Color.BLACK));
+        placeNewPiece('e', 7, new Torre(tabuleiro, Color.BLACK));
+        placeNewPiece('e', 8, new Torre(tabuleiro, Color.BLACK));
+        placeNewPiece('d', 8, new Rei(tabuleiro, Color.BLACK));
 	}
 }
