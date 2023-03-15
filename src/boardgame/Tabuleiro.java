@@ -27,4 +27,8 @@ public class Tabuleiro {
 	public Peça peca(Posição posição) {
 		return pecas[posição.getLinha()][posição.getColuna()];
 	}
+	public void moverPeca(Peça peça, Posição posição) {
+		pecas[posição.getLinha()][posição.getColuna()] = peça;
+		peça.posicao = posição;
+	}
 }
