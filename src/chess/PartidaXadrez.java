@@ -3,16 +3,27 @@ package chess;
 import boardgame.Peça;
 import boardgame.Posição;
 import boardgame.Tabuleiro;
-import boardgame.TabuleiroException;
 import chess.pecas.Rei;
 import chess.pecas.Torre;
 
 public class PartidaXadrez {
 	private Tabuleiro tabuleiro;
+	private int turno;
+	private Color jogadorAtual;
 
 	public PartidaXadrez() {
 		tabuleiro = new Tabuleiro(8, 8);
+		turno = 1;
+		jogadorAtual = Color.WHITE;
 		setupInicial();
+	}
+
+	public int getTurno() {
+		return turno;
+	}
+
+	public Color getJogadorAtual() {
+		return jogadorAtual;
 	}
 
 	public PeçaDeXadrez[][] getPecas() {
@@ -24,7 +35,8 @@ public class PartidaXadrez {
 		}
 		return mat;
 	}
-	public boolean[][] movimentosPossiveis(ChessPosition sourcePosition){
+
+	public boolean[][] movimentosPossiveis(ChessPosition sourcePosition) {
 		Posição posição = sourcePosition.toPosition();
 		validarSourcePosition(posição);
 		return tabuleiro.peca(posição).movimentosPossiveis();
@@ -36,6 +48,7 @@ public class PartidaXadrez {
 		validarSourcePosition(source);
 		validarTargetPosition(source, target);
 		Peça pecaCapiturada = makeMove(source, target);
+		proximoTurno();
 		return (PeçaDeXadrez) pecaCapiturada;
 	}
 
@@ -50,14 +63,23 @@ public class PartidaXadrez {
 		if (!tabuleiro.temUmaPeca(posição)) {
 			throw new ChessException("Não tem peça na posição de origem");
 		}
-		if(!tabuleiro.peca(posição).temAlgumMovimentoPossivel()) {
+		if(jogadorAtual != ((PeçaDeXadrez)tabuleiro.peca(posição)).getColor()) {
+			throw new ChessException("A peça escolhida não é sua");
+		}
+		if (!tabuleiro.peca(posição).temAlgumMovimentoPossivel()) {
 			throw new ChessException("Não existe movimentos possiveis para essa peça");
 		}
 	}
+
 	private void validarTargetPosition(Posição source, Posição target) {
-		if(!tabuleiro.peca(source).movimentoPossivel(target)) {
+		if (!tabuleiro.peca(source).movimentoPossivel(target)) {
 			throw new ChessException("A peça de origem não pode se mover para a posição de destino");
 		}
+	}
+	
+	private void proximoTurno() {
+		turno++;
+		jogadorAtual = (jogadorAtual == Color.WHITE) ? Color.BLACK : Color.WHITE;
 	}
 
 	private void placeNewPiece(char column, int row, PeçaDeXadrez peca) {
