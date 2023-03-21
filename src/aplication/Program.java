@@ -22,6 +22,10 @@ public class Program {
 				System.out.print("Source: ");
 				ChessPosition source = UI.lerPosicao(sc);
 				
+				boolean[][]movimentosPossiveis = partidaXadrez.movimentosPossiveis(source);
+				UI.clearScreen();
+				UI.printTabuleiro(partidaXadrez.getPecas(), movimentosPossiveis);
+				
 				System.out.println();
 				System.out.print("Target: ");
 				ChessPosition target = UI.lerPosicao(sc);
