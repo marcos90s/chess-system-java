@@ -29,6 +29,7 @@ public class PartidaXadrez {
 		Posição source = sourcePosition.toPosition();
 		Posição target = targetPosition.toPosition();
 		validarSourcePosition(source);
+		validarTargetPosition(source, target);
 		Peça pecaCapiturada = makeMove(source, target);
 		return (PeçaDeXadrez) pecaCapiturada;
 	}
@@ -46,6 +47,11 @@ public class PartidaXadrez {
 		}
 		if(!tabuleiro.peca(posição).temAlgumMovimentoPossivel()) {
 			throw new ChessException("Não existe movimentos possiveis para essa peça");
+		}
+	}
+	private void validarTargetPosition(Posição source, Posição target) {
+		if(!tabuleiro.peca(source).movimentoPossivel(target)) {
+			throw new ChessException("A peça de origem não pode se mover para a posição de destino");
 		}
 	}
 

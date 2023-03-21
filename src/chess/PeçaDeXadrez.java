@@ -1,6 +1,7 @@
 package chess;
 
 import boardgame.Peça;
+import boardgame.Posição;
 import boardgame.Tabuleiro;
 
 public abstract class PeçaDeXadrez extends Peça {
@@ -14,5 +15,10 @@ public abstract class PeçaDeXadrez extends Peça {
 
 	public Color getColor() {
 		return color;
+	}
+	
+	protected boolean temPecaDoOponente(Posição posição) {
+		PeçaDeXadrez p = (PeçaDeXadrez)getTabuleiro().peca(posição);
+		return p != null && p.getColor() != color;
 	}
 }	
