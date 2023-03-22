@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import boardgame.Peça;
 import boardgame.Posição;
 import boardgame.Tabuleiro;
+import chess.pecas.Bispo;
 import chess.pecas.Peão;
 import chess.pecas.Rei;
 import chess.pecas.Torre;
@@ -187,7 +188,9 @@ public class PartidaXadrez {
 
 	private void setupInicial() {
 		placeNewPiece('a', 1, new Torre(tabuleiro, Color.WHITE));
+		placeNewPiece('c', 1, new Bispo(tabuleiro, Color.WHITE));
         placeNewPiece('e', 1, new Rei(tabuleiro, Color.WHITE));
+        placeNewPiece('f', 1, new Bispo(tabuleiro, Color.WHITE));
         placeNewPiece('h', 1, new Torre(tabuleiro, Color.WHITE));
         placeNewPiece('a', 2, new Peão(tabuleiro, Color.WHITE));
         placeNewPiece('b', 2, new Peão(tabuleiro, Color.WHITE));
@@ -199,7 +202,9 @@ public class PartidaXadrez {
         placeNewPiece('h', 2, new Peão(tabuleiro, Color.WHITE));
         
         placeNewPiece('a', 8, new Torre(tabuleiro, Color.BLACK));
+        placeNewPiece('c', 8, new Bispo(tabuleiro, Color.BLACK));
         placeNewPiece('e', 8, new Rei(tabuleiro, Color.BLACK));
+        placeNewPiece('f', 8, new Bispo(tabuleiro, Color.BLACK));
         placeNewPiece('h', 8, new Torre(tabuleiro, Color.BLACK));
         placeNewPiece('a', 7, new Peão(tabuleiro, Color.BLACK));
         placeNewPiece('b', 7, new Peão(tabuleiro, Color.BLACK));
