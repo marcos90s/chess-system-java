@@ -20,10 +20,12 @@ public class PartidaXadrez {
 	private Color jogadorAtual;
 	private boolean check;
 	private boolean checkMate;
+	private PeçaDeXadrez enPassantVulnerable;
 
 	private List<Peça> pecasNoTabuleiro = new ArrayList<>();
 	private List<Peça> pecasCapturadas = new ArrayList<>();
-
+ 
+	
 	public PartidaXadrez() {
 		tabuleiro = new Tabuleiro(8, 8);
 		turno = 1;
@@ -38,13 +40,17 @@ public class PartidaXadrez {
 	public Color getJogadorAtual() {
 		return jogadorAtual;
 	}
-	
+
 	public boolean getCheck() {
 		return check;
 	}
-	
+
 	public boolean getCheckMate() {
 		return checkMate;
+	}
+
+	public PeçaDeXadrez getEnPassantVulnerable() {
+		return enPassantVulnerable;
 	}
 
 	public PeçaDeXadrez[][] getPecas() {
@@ -69,23 +75,33 @@ public class PartidaXadrez {
 		validarSourcePosition(source);
 		validarTargetPosition(source, target);
 		Peça pecaCapiturada = makeMove(source, target);
-		
-		if(testeCheck(jogadorAtual)) {
+
+		if (testeCheck(jogadorAtual)) {
 			desfazerMove(source, target, pecaCapiturada);
 			throw new ChessException("Você não pode se colocar em check");
 		}
+
+		PeçaDeXadrez peçaMovida = (PeçaDeXadrez) tabuleiro.peca(target);
+
 		check = (testeCheck(oponente(jogadorAtual))) ? true : false;
-		if(testeCheckMate(oponente(jogadorAtual))) {
+		if (testeCheckMate(oponente(jogadorAtual))) {
 			checkMate = true;
+		} else {
+			proximoTurno();
 		}
-		else {
-		proximoTurno();
+		// Movimento especial en passant
+		if (peçaMovida instanceof Peão
+				&& (target.getLinha() == source.getLinha() - 2 || target.getLinha() == source.getLinha() + 2)) {
+			enPassantVulnerable = peçaMovida;
+		} else {
+			enPassantVulnerable = null;
 		}
+
 		return (PeçaDeXadrez)pecaCapiturada;
 	}
 
 	private Peça makeMove(Posição source, Posição target) {
-		PeçaDeXadrez p = (PeçaDeXadrez)tabuleiro.removerPeca(source);
+		PeçaDeXadrez p = (PeçaDeXadrez) tabuleiro.removerPeca(source);
 		p.incrementarContadorMovimento();
 		Peça capturedPiece = tabuleiro.removerPeca(target);
 		tabuleiro.moverPeca(p, target);
@@ -94,52 +110,79 @@ public class PartidaXadrez {
 			pecasNoTabuleiro.remove(capturedPiece);
 			pecasCapturadas.add(capturedPiece);
 		}
-		//#Movimento Especial castling rook do lado do rei
-		if(p instanceof Rei && target.getColuna() == source.getColuna() +2) {
-			Posição sourceT = new Posição(source.getLinha(),source.getColuna()+3);
-			Posição targetT = new Posição(source.getLinha(),source.getColuna()+1);
-			PeçaDeXadrez torre = (PeçaDeXadrez)tabuleiro.removerPeca(sourceT);
+		// #Movimento Especial castling rook do lado do rei
+		if (p instanceof Rei && target.getColuna() == source.getColuna() + 2) {
+			Posição sourceT = new Posição(source.getLinha(), source.getColuna() + 3);
+			Posição targetT = new Posição(source.getLinha(), source.getColuna() + 1);
+			PeçaDeXadrez torre = (PeçaDeXadrez) tabuleiro.removerPeca(sourceT);
 			tabuleiro.moverPeca(torre, targetT);
 			torre.incrementarContadorMovimento();
 		}
-		//#Movimento Especial castling rook do lado do Rainha
-				if(p instanceof Rei && target.getColuna() == source.getColuna() -2) {
-					Posição sourceT = new Posição(source.getLinha(),source.getColuna() -4);
-					Posição targetT = new Posição(source.getLinha(),source.getColuna() -1);
-					PeçaDeXadrez torre = (PeçaDeXadrez)tabuleiro.removerPeca(sourceT);
-					tabuleiro.moverPeca(torre, targetT);
-					torre.incrementarContadorMovimento();
+		// #Movimento Especial castling rook do lado do Rainha
+		if (p instanceof Rei && target.getColuna() == source.getColuna() - 2) {
+			Posição sourceT = new Posição(source.getLinha(), source.getColuna() - 4);
+			Posição targetT = new Posição(source.getLinha(), source.getColuna() - 1);
+			PeçaDeXadrez torre = (PeçaDeXadrez) tabuleiro.removerPeca(sourceT);
+			tabuleiro.moverPeca(torre, targetT);
+			torre.incrementarContadorMovimento();
+		}
+
+		// Movimento Especial en passant
+		if (p instanceof Peão) {
+			if (source.getColuna() != target.getColuna() && capturedPiece == null) {
+				Posição posicaoPeao;
+				if (p.getColor() == Color.WHITE) {
+					posicaoPeao = new Posição(target.getLinha() + 1, target.getColuna());
+				} else {
+					posicaoPeao = new Posição(target.getLinha() - 1, target.getColuna());
 				}
-				
-		
+				capturedPiece = tabuleiro.removerPeca(posicaoPeao);
+				pecasCapturadas.add(capturedPiece);
+				pecasNoTabuleiro.remove(capturedPiece);
+			}
+		}
+
 		return capturedPiece;
 	}
 
-	private void desfazerMove(Posição source, Posição target, Peça pecaCapturada) {
-		PeçaDeXadrez p = (PeçaDeXadrez)tabuleiro.removerPeca(target);
+	private void desfazerMove(Posição source, Posição target, Peça capturedPiece) {
+		PeçaDeXadrez p = (PeçaDeXadrez) tabuleiro.removerPeca(target);
 		p.decrementarContadorMovimento();
 		tabuleiro.moverPeca(p, source);
-		if (pecaCapturada != null) {
-			tabuleiro.moverPeca(pecaCapturada, target);
-			pecasCapturadas.remove(pecaCapturada);
-			pecasNoTabuleiro.add(pecaCapturada);
+		if (capturedPiece != null) {
+			tabuleiro.moverPeca(capturedPiece, target);
+			pecasCapturadas.remove(capturedPiece);
+			pecasNoTabuleiro.add(capturedPiece);
 		}
-		//#Movimento Especial castling rook do lado do rei
-				if(p instanceof Rei && target.getColuna() == source.getColuna() +2) {
-					Posição sourceT = new Posição(source.getLinha(),source.getColuna() +3);
-					Posição targetT = new Posição(source.getLinha(),source.getColuna() +1);
-					PeçaDeXadrez torre = (PeçaDeXadrez)tabuleiro.removerPeca(targetT);
-					tabuleiro.moverPeca(torre, sourceT);
-					torre.decrementarContadorMovimento();
+		// #Movimento Especial castling rook do lado do rei
+		if (p instanceof Rei && target.getColuna() == source.getColuna() + 2) {
+			Posição sourceT = new Posição(source.getLinha(), source.getColuna() + 3);
+			Posição targetT = new Posição(source.getLinha(), source.getColuna() + 1);
+			PeçaDeXadrez torre = (PeçaDeXadrez) tabuleiro.removerPeca(targetT);
+			tabuleiro.moverPeca(torre, sourceT);
+			torre.decrementarContadorMovimento();
+		}
+		// #Movimento Especial castling rook do lado do Rainha
+		if (p instanceof Rei && target.getColuna() == source.getColuna() - 2) {
+			Posição sourceT = new Posição(source.getLinha(), source.getColuna() - 4);
+			Posição targetT = new Posição(source.getLinha(), source.getColuna() - 1);
+			PeçaDeXadrez torre = (PeçaDeXadrez) tabuleiro.removerPeca(targetT);
+			tabuleiro.moverPeca(torre, sourceT);
+			torre.decrementarContadorMovimento();
+		}
+		// Movimento Especial en passant
+		if (p instanceof Peão) {
+			if (source.getColuna() != target.getColuna() && capturedPiece == enPassantVulnerable) {
+				PeçaDeXadrez peão = (PeçaDeXadrez)tabuleiro.removerPeca(target);
+				Posição posicaoPeao;
+				if (p.getColor() == Color.WHITE) {
+					posicaoPeao = new Posição(3, target.getColuna());
+				} else {
+					posicaoPeao = new Posição(4, target.getColuna());
 				}
-				//#Movimento Especial castling rook do lado do Rainha
-						if(p instanceof Rei && target.getColuna() == source.getColuna() -2) {
-							Posição sourceT = new Posição(source.getLinha(),source.getColuna() -4);
-							Posição targetT = new Posição(source.getLinha(),source.getColuna() -1);
-							PeçaDeXadrez torre = (PeçaDeXadrez)tabuleiro.removerPeca(targetT);
-							tabuleiro.moverPeca(torre, sourceT);
-							torre.decrementarContadorMovimento();
-						}
+				tabuleiro.moverPeca(peão, posicaoPeao);
+			}
+		}
 	}
 
 	private void validarSourcePosition(Posição posição) {
@@ -171,7 +214,8 @@ public class PartidaXadrez {
 	}
 
 	private PeçaDeXadrez rei(Color color) {
-		List<Peça> list = pecasNoTabuleiro.stream().filter(x -> ((PeçaDeXadrez)x).getColor() == color).collect(Collectors.toList());
+		List<Peça> list = pecasNoTabuleiro.stream().filter(x -> ((PeçaDeXadrez) x).getColor() == color)
+				.collect(Collectors.toList());
 		for (Peça p : list) {
 			if (p instanceof Rei) {
 				return (PeçaDeXadrez) p;
@@ -182,7 +226,8 @@ public class PartidaXadrez {
 
 	private boolean testeCheck(Color color) {
 		Posição reiPosicao = rei(color).getChessPosition().toPosition();
-		List<Peça> pecasDoOponente = pecasNoTabuleiro.stream().filter(x -> ((PeçaDeXadrez) x).getColor() == oponente(color)).collect(Collectors.toList());
+		List<Peça> pecasDoOponente = pecasNoTabuleiro.stream()
+				.filter(x -> ((PeçaDeXadrez) x).getColor() == oponente(color)).collect(Collectors.toList());
 		for (Peça p : pecasDoOponente) {
 			boolean[][] mat = p.movimentosPossiveis();
 			if (mat[reiPosicao.getLinha()][reiPosicao.getColuna()]) {
@@ -191,23 +236,24 @@ public class PartidaXadrez {
 		}
 		return false;
 	}
-	
+
 	private boolean testeCheckMate(Color color) {
-		if(!testeCheck(color)) {
+		if (!testeCheck(color)) {
 			return false;
 		}
-		List<Peça> list = pecasNoTabuleiro.stream().filter(x -> ((PeçaDeXadrez) x).getColor() == color).collect(Collectors.toList());
-		for(Peça p : list) {
+		List<Peça> list = pecasNoTabuleiro.stream().filter(x -> ((PeçaDeXadrez) x).getColor() == color)
+				.collect(Collectors.toList());
+		for (Peça p : list) {
 			boolean[][] mat = p.movimentosPossiveis();
-			for(int i = 0; i < tabuleiro.getLinhas(); i++) {
-				for(int j = 0; j < tabuleiro.getColunas(); j++) {
-					if(mat[i][j]) {
-						Posição source = ((PeçaDeXadrez)p).getChessPosition().toPosition();
+			for (int i = 0; i < tabuleiro.getLinhas(); i++) {
+				for (int j = 0; j < tabuleiro.getColunas(); j++) {
+					if (mat[i][j]) {
+						Posição source = ((PeçaDeXadrez) p).getChessPosition().toPosition();
 						Posição target = new Posição(i, j);
 						Peça capturedPiece = makeMove(source, target);
 						boolean testeCheck = testeCheck(color);
 						desfazerMove(source, target, capturedPiece);
-						if(!testeCheck) {
+						if (!testeCheck) {
 							return false;
 						}
 					}
@@ -227,34 +273,34 @@ public class PartidaXadrez {
 		placeNewPiece('b', 1, new Cavalo(tabuleiro, Color.WHITE));
 		placeNewPiece('c', 1, new Bispo(tabuleiro, Color.WHITE));
 		placeNewPiece('d', 1, new Rainha(tabuleiro, Color.WHITE));
-        placeNewPiece('e', 1, new Rei(tabuleiro, Color.WHITE, this));
-        placeNewPiece('f', 1, new Bispo(tabuleiro, Color.WHITE));
-        placeNewPiece('g', 1, new Cavalo(tabuleiro, Color.WHITE));
-        placeNewPiece('h', 1, new Torre(tabuleiro, Color.WHITE));
-        placeNewPiece('a', 2, new Peão(tabuleiro, Color.WHITE));
-        placeNewPiece('b', 2, new Peão(tabuleiro, Color.WHITE));
-        placeNewPiece('c', 2, new Peão(tabuleiro, Color.WHITE));
-        placeNewPiece('d', 2, new Peão(tabuleiro, Color.WHITE));
-        placeNewPiece('e', 2, new Peão(tabuleiro, Color.WHITE));
-        placeNewPiece('f', 2, new Peão(tabuleiro, Color.WHITE));
-        placeNewPiece('g', 2, new Peão(tabuleiro, Color.WHITE));
-        placeNewPiece('h', 2, new Peão(tabuleiro, Color.WHITE));
-        
-        placeNewPiece('a', 8, new Torre(tabuleiro, Color.BLACK));
-        placeNewPiece('b', 8, new Cavalo(tabuleiro, Color.BLACK));
-        placeNewPiece('c', 8, new Bispo(tabuleiro, Color.BLACK));
-        placeNewPiece('d', 8, new Rainha(tabuleiro, Color.BLACK));
-        placeNewPiece('e', 8, new Rei(tabuleiro, Color.BLACK, this));
-        placeNewPiece('f', 8, new Bispo(tabuleiro, Color.BLACK));
-        placeNewPiece('g', 8, new Cavalo(tabuleiro, Color.BLACK));
-        placeNewPiece('h', 8, new Torre(tabuleiro, Color.BLACK));
-        placeNewPiece('a', 7, new Peão(tabuleiro, Color.BLACK));
-        placeNewPiece('b', 7, new Peão(tabuleiro, Color.BLACK));
-        placeNewPiece('c', 7, new Peão(tabuleiro, Color.BLACK));
-        placeNewPiece('d', 7, new Peão(tabuleiro, Color.BLACK));
-        placeNewPiece('e', 7, new Peão(tabuleiro, Color.BLACK));
-        placeNewPiece('f', 7, new Peão(tabuleiro, Color.BLACK));
-        placeNewPiece('g', 7, new Peão(tabuleiro, Color.BLACK));
-        placeNewPiece('h', 7, new Peão(tabuleiro, Color.BLACK));
+		placeNewPiece('e', 1, new Rei(tabuleiro, Color.WHITE, this));
+		placeNewPiece('f', 1, new Bispo(tabuleiro, Color.WHITE));
+		placeNewPiece('g', 1, new Cavalo(tabuleiro, Color.WHITE));
+		placeNewPiece('h', 1, new Torre(tabuleiro, Color.WHITE));
+		placeNewPiece('a', 2, new Peão(tabuleiro, Color.WHITE, this));
+		placeNewPiece('b', 2, new Peão(tabuleiro, Color.WHITE, this));
+		placeNewPiece('c', 2, new Peão(tabuleiro, Color.WHITE, this));
+		placeNewPiece('d', 2, new Peão(tabuleiro, Color.WHITE, this));
+		placeNewPiece('e', 2, new Peão(tabuleiro, Color.WHITE, this));
+		placeNewPiece('f', 2, new Peão(tabuleiro, Color.WHITE, this));
+		placeNewPiece('g', 2, new Peão(tabuleiro, Color.WHITE, this));
+		placeNewPiece('h', 2, new Peão(tabuleiro, Color.WHITE, this));
+
+		placeNewPiece('a', 8, new Torre(tabuleiro, Color.BLACK));
+		placeNewPiece('b', 8, new Cavalo(tabuleiro, Color.BLACK));
+		placeNewPiece('c', 8, new Bispo(tabuleiro, Color.BLACK));
+		placeNewPiece('d', 8, new Rainha(tabuleiro, Color.BLACK));
+		placeNewPiece('e', 8, new Rei(tabuleiro, Color.BLACK, this));
+		placeNewPiece('f', 8, new Bispo(tabuleiro, Color.BLACK));
+		placeNewPiece('g', 8, new Cavalo(tabuleiro, Color.BLACK));
+		placeNewPiece('h', 8, new Torre(tabuleiro, Color.BLACK));
+		placeNewPiece('a', 7, new Peão(tabuleiro, Color.BLACK, this));
+		placeNewPiece('b', 7, new Peão(tabuleiro, Color.BLACK, this));
+		placeNewPiece('c', 7, new Peão(tabuleiro, Color.BLACK, this));
+		placeNewPiece('d', 7, new Peão(tabuleiro, Color.BLACK, this));
+		placeNewPiece('e', 7, new Peão(tabuleiro, Color.BLACK, this));
+		placeNewPiece('f', 7, new Peão(tabuleiro, Color.BLACK, this));
+		placeNewPiece('g', 7, new Peão(tabuleiro, Color.BLACK, this));
+		placeNewPiece('h', 7, new Peão(tabuleiro, Color.BLACK, this));
 	}
 }
