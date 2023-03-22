@@ -15,6 +15,7 @@ public class PartidaXadrez {
 	private int turno;
 	private Color jogadorAtual;
 	private boolean check;
+	private boolean checkMate;
 
 	private List<Peça> pecasNoTabuleiro = new ArrayList<>();
 	private List<Peça> pecasCapturadas = new ArrayList<>();
@@ -36,6 +37,10 @@ public class PartidaXadrez {
 	
 	public boolean getCheck() {
 		return check;
+	}
+	
+	public boolean getCheckMate() {
+		return checkMate;
 	}
 
 	public PeçaDeXadrez[][] getPecas() {
@@ -66,8 +71,13 @@ public class PartidaXadrez {
 			throw new ChessException("Você não pode se colocar em check");
 		}
 		check = (testeCheck(oponente(jogadorAtual))) ? true : false;
+		if(testeCheckMate(oponente(jogadorAtual))) {
+			checkMate = true;
+		}
+		else {
 		proximoTurno();
-		return (PeçaDeXadrez) pecaCapiturada;
+		}
+		return (PeçaDeXadrez)pecaCapiturada;
 	}
 
 	private Peça makeMove(Posição source, Posição target) {
@@ -141,6 +151,31 @@ public class PartidaXadrez {
 		}
 		return false;
 	}
+	
+	private boolean testeCheckMate(Color color) {
+		if(!testeCheck(color)) {
+			return false;
+		}
+		List<Peça> list = pecasNoTabuleiro.stream().filter(x -> ((PeçaDeXadrez) x).getColor() == color).collect(Collectors.toList());
+		for(Peça p : list) {
+			boolean[][] mat = p.movimentosPossiveis();
+			for(int i = 0; i < tabuleiro.getLinhas(); i++) {
+				for(int j = 0; j < tabuleiro.getColunas(); j++) {
+					if(mat[i][j]) {
+						Posição source = ((PeçaDeXadrez)p).getChessPosition().toPosition();
+						Posição target = new Posição(i, j);
+						Peça capturedPiece = makeMove(source, target);
+						boolean testeCheck = testeCheck(color);
+						desfazerMove(source, target, capturedPiece);
+						if(!testeCheck) {
+							return false;
+						}
+					}
+				}
+			}
+		}
+		return true;
+	}
 
 	private void placeNewPiece(char column, int row, PeçaDeXadrez peca) {
 		tabuleiro.moverPeca(peca, new ChessPosition(column, row).toPosition());
@@ -148,18 +183,11 @@ public class PartidaXadrez {
 	}
 
 	private void setupInicial() {
-		placeNewPiece('c', 1, new Torre(tabuleiro, Color.WHITE));
-		placeNewPiece('c', 2, new Torre(tabuleiro, Color.WHITE));
-		placeNewPiece('d', 2, new Torre(tabuleiro, Color.WHITE));
-		placeNewPiece('e', 2, new Torre(tabuleiro, Color.WHITE));
-		placeNewPiece('e', 1, new Torre(tabuleiro, Color.WHITE));
-		placeNewPiece('d', 1, new Rei(tabuleiro, Color.WHITE));
+		placeNewPiece('h', 7, new Torre(tabuleiro, Color.WHITE));
+		placeNewPiece('d', 1, new Torre(tabuleiro, Color.WHITE));
+		placeNewPiece('e', 1, new Rei(tabuleiro, Color.WHITE));
 
-		placeNewPiece('c', 7, new Torre(tabuleiro, Color.BLACK));
-		placeNewPiece('c', 8, new Torre(tabuleiro, Color.BLACK));
-		placeNewPiece('d', 7, new Torre(tabuleiro, Color.BLACK));
-		placeNewPiece('e', 7, new Torre(tabuleiro, Color.BLACK));
-		placeNewPiece('e', 8, new Torre(tabuleiro, Color.BLACK));
-		placeNewPiece('d', 8, new Rei(tabuleiro, Color.BLACK));
+		placeNewPiece('b', 8, new Torre(tabuleiro, Color.BLACK));
+		placeNewPiece('a', 8, new Rei(tabuleiro, Color.BLACK));
 	}
 }

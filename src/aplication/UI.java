@@ -45,7 +45,8 @@ public class UI {
 			char coluna = s.charAt(0);
 			int linha = Integer.parseInt(s.substring(1));
 			return new ChessPosition(coluna, linha);
-		} catch (RuntimeException e) {
+		} 
+		catch (RuntimeException e) {
 			throw new InputMismatchException("Erro lendo a posição. Valores validos vão de a1 até h8");
 		}
 	}
@@ -56,9 +57,15 @@ public class UI {
 		printCapturedPieces(captured);
 		System.out.println();
 		System.out.println("Turno : " + partidaXadrez.getTurno());
-		System.out.println("Esperando jogador: " + partidaXadrez.getJogadorAtual());
-		if(partidaXadrez.getCheck()) {
-			System.out.println("CHECK!");
+		if(!partidaXadrez.getCheckMate()) {
+			System.out.println("Esperando jogador: " + partidaXadrez.getJogadorAtual());
+			if(partidaXadrez.getCheck()) {
+				System.out.println("CHECK!");
+			}
+		}
+		else {
+			System.out.println("CHECKMATE!");
+			System.out.println("Winner: "+partidaXadrez.getJogadorAtual());
 		}
 	}
 
