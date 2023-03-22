@@ -6,6 +6,7 @@ public abstract class Peça {
 
 	public Peça(Tabuleiro tabuleiro) {
 		this.tabuleiro = tabuleiro;
+		posicao = null;
 	}
 
 	protected Tabuleiro getTabuleiro() {

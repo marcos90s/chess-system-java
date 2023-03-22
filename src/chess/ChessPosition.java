@@ -14,11 +14,11 @@ public class ChessPosition {
 		this.linha = linha;
 	}
 
-	public char getColumn() {
+	public char getColuna() {
 		return coluna;
 	}
 
-	public int getRow() {
+	public int getLinha() {
 		return linha;
 	}
 
@@ -27,7 +27,7 @@ public class ChessPosition {
 	}
 
 	protected static ChessPosition fromPosition(Posição posição) {
-		return new ChessPosition((char) ('a' - posição.getColuna()), 8 - posição.getColuna());
+		return new ChessPosition((char) ('a' + posição.getColuna()), 8 - posição.getLinha());
 	}
 
 	@Override

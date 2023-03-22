@@ -15,6 +15,10 @@ public abstract class PeçaDeXadrez extends Peça {
 
 	public Color getColor() {
 		return color;
+	} 
+	
+	public ChessPosition getChessPosition() {
+		return ChessPosition.fromPosition(posicao); 
 	}
 	
 	protected boolean temPecaDoOponente(Posição posição) {
